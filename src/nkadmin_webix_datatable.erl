@@ -1151,6 +1151,25 @@ column(Id, date, Name, Column, Session) ->
         }
     };
 
+column(Id, time_duration, Name, Column, Session) ->
+    HeaderColspan = maps:get(header_colspan, Column, <<"1">>),
+    Fillspace = maps:get(fillspace, Column, <<"1">>),
+    #{
+        id => Id,
+        header => [
+            #{ text => i18n(Name, Session), colspan => HeaderColspan }
+        ],
+        fillspace => Fillspace,
+        minWidth => <<"100">>,
+        format => #{
+            nkParseFunction => <<"
+                function(value) {   // 'en-US', 'es-ES', etc.
+                    return toHHMMSS(value)
+                }
+            ">>
+        }
+    };
+
 column(Id, {icon, Icon}, _Name, _Column, _Session) ->
     #{
         id => Id,
