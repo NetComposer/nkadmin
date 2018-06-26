@@ -1,14 +1,31 @@
 (function(){
 	
 	logic = (function(){
+        // Constants
+        var LS_NC_LOGIN = "nc-admin-login";
+        var LS_NC_PWD = "nc-admin-pwd";
+        var LS_NC_REMEMBER_ME = "nc-admin-remember-me";
+        var MAX_CONNECTION_TRIES = 5;
+        var WEBSOCKET_RECONNECTION_TIMEOUT = 1000;
+        
+        var SEPARATOR = "_";
+
+        var ADMIN_FRAME = "admin_frame";
+        var ADMIN_FRAME_DOMAIN_ICON = "admin_frame_domain_icon";
+        var ADMIN_FRAME_DOMAIN_NAME = "admin_frame_domain_name";
+        var ADMIN_FRAME_USER_NAME = "admin_frame_user_name";
+        var ADMIN_FRAME_USER_ICON = "admin_frame_user_icon";
+        var ADMIN_FRAME_USER_MENU = "admin_frame_user_menu";
+
+        var DOMAIN_TREE = "domain_tree";
+    
+        // Variables
         var host = "v.netc.io";
 	    var port = 443;
         var pathname = '/_admin';
         var path = '_api/ws';
         var useWss = true;
         var defaultDomain = "/";
-	    var lsNcLogin = "nc-admin-login";
-	    var lsNcPwd = "nc-admin-pwd";
 	    var roomPath = undefined;
 	    var roomUrl = "/sfu/#room/";
 	    var roomView = "/present";
@@ -27,19 +44,10 @@
         var sessionId = null;
         var adminSessionId = null;
         var treeIds = [];
+        var rememberMe = (window.localStorage && localStorage.getItem(LS_NC_REMEMBER_ME) === "1")? 1 : 0;
+        var connectionTries = 0;
+        var currentStorage = rememberMe? localStorage : sessionStorage;
 
-        // Constants
-        var SEPARATOR = "_";
-
-        var ADMIN_FRAME = "admin_frame";
-        var ADMIN_FRAME_DOMAIN_ICON = "admin_frame_domain_icon";
-        var ADMIN_FRAME_DOMAIN_NAME = "admin_frame_domain_name";
-        var ADMIN_FRAME_USER_NAME = "admin_frame_user_name";
-        var ADMIN_FRAME_USER_ICON = "admin_frame_user_icon";
-        var ADMIN_FRAME_USER_MENU = "admin_frame_user_menu";
-
-        var DOMAIN_TREE = "domain_tree";
-    
         // Frame state:
         var frameState = {
             ADMIN_FRAME: {},
@@ -98,8 +106,8 @@
 
             document.addEventListener("onWsOpen", function(response) {
                 console.log("Websocket opened");
-                ncLogin = localStorage.getItem(lsNcLogin);
-                ncPass = localStorage.getItem(lsNcPwd);
+                ncLogin = currentStorage.getItem(LS_NC_LOGIN);
+                ncPass = currentStorage.getItem(LS_NC_PWD);
 
                 if (ncLogin && ncPass
                     && ncLogin !== "null" && ncPass !== "null") {
@@ -112,43 +120,64 @@
             }, this);
 
             document.addEventListener("onWsClose", function(response) {
-                console.log("Websocket closed");
-                if (window.localStorage) {
-                    // Commented to ease development
-                    //localStorage.removeItem(lsNcLogin);
-                    //localStorage.removeItem(lsNcPwd);
-                }
-                clearWorkspace();
+                console.log("Websocket closed, wsError: ", wsError);
                 $$("workspace").disable();
-        	    $$(ADMIN_FRAME_USER_MENU).hide();
-            	$$("login-popup").destructor();
-    		    webix.ui(loginPopup);
-    	    	$$("login-popup").show();
-            	$$("userLogin").focus();
                 if (!loggedOut) {
-                    $$("loginError").setHTML("Websocket connection lost!");
-                    console.log("onWsClose: ", response);
-                } else if (wsError !== "") {
-                    $$("loginError").setHTML(wsError);
-                    wsError = "";
+                    // Websocket connection was lost
+                    if (connectionTries === 0) {
+                        webix.message({"type": "error", "text": "Websocket connection lost!"});
+                        console.log("Websocket connection lost");
+                        console.log("onWsClose: ", response);
+                    }
+                    if (connectionTries < MAX_CONNECTION_TRIES) {
+                        connectionTries++;
+                        console.log("Trying to reconnect websocket... " + connectionTries);
+                        webix.message({"type": "info", "text": "Reconnecting websocket..."});
+                        window.setTimeout(connect, WEBSOCKET_RECONNECTION_TIMEOUT);
+                    } else {
+                        clearWorkspace();
+                        $$("workspace").disable();
+                        $$(ADMIN_FRAME_USER_MENU).hide();
+                        $$("login-popup").destructor();
+                        loginPopup = logic.createLoginPopup();
+                        webix.ui(loginPopup);
+                        $$("login-popup").show();
+                        $$("userLogin").focus();
+                        $$("loginError").setHTML("Websocket connection lost!");
+                    }
+                } else {
+                    // User logged out
+                    clearWorkspace();
+                    $$("workspace").disable();
+                    $$(ADMIN_FRAME_USER_MENU).hide();
+                    $$("login-popup").destructor();
+                    loginPopup = logic.createLoginPopup();
+                    webix.ui(loginPopup);
+                    $$("login-popup").show();
+                    $$("userLogin").focus();
+                    if (wsError !== "") {
+                        $$("loginError").setHTML(wsError);
+                        wsError = "";
+                    }
                 }
             });
 
             document.addEventListener("loginSuccessEvent", function(response) {
                 loggedOut = false;
+                connectionTries = 0;
                 var data = response.detail[0].data;
 
                 console.log("loginSuccessEvent: ", response, "data: ", data);
 
                 // Save user obj_id
                 userId = data.obj_id;
-                domainId = data.domain_id;             
+                domainId = data.domain_id;
                 sessionId = data.session_id;
                 console.log("userId: ", userId, "sessionId: ", sessionId);
 
                 if (window.localStorage) {
-                    localStorage.setItem(lsNcLogin, ncLogin);
-                    localStorage.setItem(lsNcPwd, ncPass);
+                    currentStorage.setItem(LS_NC_LOGIN, ncLogin);
+                    currentStorage.setItem(LS_NC_PWD, ncPass);
                 }
             }, this);
 
@@ -156,8 +185,8 @@
                 console.log("loginErrorEvent: ", response);
 
                 if (window.localStorage) {
-                    localStorage.removeItem(lsNcLogin);
-                    localStorage.removeItem(lsNcPwd);
+                    currentStorage.removeItem(LS_NC_LOGIN);
+                    currentStorage.removeItem(LS_NC_PWD);
                 }
                 //$$("login-popup").show();
                 //$$("userLogin").focus();
@@ -760,7 +789,7 @@
                     });
                     doLogout();
                 }
-            })
+            });
 
             window.onpopstate = function(event) {
                 console.log("onpopstate -> ", window.location.hash);
@@ -852,8 +881,8 @@
         function doLogin(user, password, domain) {
             if (!ncClient.isConnected()) {
                 if (window.localStorage) {
-                    localStorage.setItem(lsNcLogin, user);
-                    localStorage.setItem(lsNcPwd, password);
+                    currentStorage.setItem(LS_NC_LOGIN, user);
+                    currentStorage.setItem(LS_NC_PWD, password);
                 }
                 connect();
             } else {
@@ -900,7 +929,19 @@
                 this.getTopParentView().hide(); //hide window
                 ncLogin = $$("login-form").getValues().login;
                 ncPass = $$("login-form").getValues().password;
-
+                remMe = $$("login-form").getValues().rememberMe;
+                
+                if (window.localStorage) {
+                    localStorage.setItem(LS_NC_REMEMBER_ME, remMe);
+                    if (remMe) {
+                        rememberMe = 1;
+                        currentStorage = localStorage;
+                    } else {
+                        rememberMe = 0;
+                        currentStorage = sessionStorage;
+                    }
+                }
+                
                 doLogin(ncLogin, ncPass, defaultDomain);
             } else {
     			webix.message({ "type": "error", "text": "Form data is invalid" });
@@ -1846,8 +1887,17 @@
             		"borderless": true,
             		"elements": [
             			{ "view": "text", "id": "userLogin", "label": "Login", "name": "login" },
-            			{ "view": "text", "type": "password", "label": "Password", "name": "password" },
-            			{ "view": "template", "id": "loginError", "height": 20, "borderless": true, "css": "text_danger no_padding", "template": ""},
+                        { "view": "text", "type": "password", "label": "Password", "name": "password" },
+                        { "view": "checkbox", "id": "rememberMe", "labelRight": "Remember me", "value": rememberMe, "name": "rememberMe", "disabled": !window.hasOwnProperty("localStorage"),
+                            "on": {
+                                "onChange": function() {
+                                    if (window.localStorage) {
+                                        localStorage.setItem(LS_NC_REMEMBER_ME, this.getValue());
+                                    }
+                                }
+                            }
+                        },
+                        { "view": "template", "id": "loginError", "height": 20, "borderless": true, "css": "text_danger no_padding", "template": ""},
             			{ "view": "button", "value": "Submit", "click": submitLogin}
             		],
             		"on": {
@@ -2421,8 +2471,8 @@
     					"callback": function(response) {
     						if(response) {
                                 if (window.localStorage) {
-                                    localStorage.removeItem(lsNcLogin);
-                                    localStorage.removeItem(lsNcPwd);
+                                    currentStorage.removeItem(LS_NC_LOGIN);
+                                    currentStorage.removeItem(LS_NC_PWD);
                                 }
                                 window.location.hash = '';
                                 //doLogout();
