@@ -1277,9 +1277,9 @@
                                 if (icon.startsWith("fa-")) {
                                     template += "<i class='webix_icon fa " + icon + " " + rotate + "' aria-hidden='true'></i>";
                                 } else if (icon.startsWith("file-")) {
-                                    template += "<img class='file_icon' src=" + getFileSrc(icon) + " />"
+                                    template += "<img class='file_icon' src=" + getFileSrc(icon) + " onerror=\"this.onerror=null; this.src='img/blank.jpg'\" alt=''/>"
                                 } else if (icon.startsWith("img/")) {
-                                    template += "<img class='img_icon' src=" + icon + " />"
+                                    template += "<img class='img_icon' src=" + icon + " onerror=\"this.onerror=null; this.src='img/default.png'\" alt=''/>"
                                 }
                                 console.log('Icon template: ', template);
                                 return template;
@@ -1850,9 +1850,9 @@
             }
 
             if (user_icon !== "") {
-                user_img = "<img class='photo' src=" + getFileSrc(user_icon) + " />";
+                user_img = "<img class='photo' src=" + getFileSrc(user_icon) + " onerror=\"this.onerror=null; this.src='img/blank.jpg'\" alt=''/>";
             } else if (user_name !== "") {
-                user_img = "<img class='photo' src='img/avatar.png' />";
+                user_img = "<img class='photo' src='img/avatar.png' onerror=\"this.onerror=null; this.src='img/blank.jpg'\" alt=''/>";
             }
 
             return {
