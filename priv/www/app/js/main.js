@@ -1,5 +1,5 @@
 (function(){
-	
+
 	logic = (function(){
         // Constants
         var LS_NC_LOGIN = "nc-admin-login";
@@ -7,7 +7,7 @@
         var LS_NC_REMEMBER_ME = "nc-admin-remember-me";
         var MAX_CONNECTION_TRIES = 5;
         var WEBSOCKET_RECONNECTION_TIMEOUT = 1000;
-        
+
         var SEPARATOR = "_";
 
         var ADMIN_FRAME = "admin_frame";
@@ -18,7 +18,7 @@
         var ADMIN_FRAME_USER_MENU = "admin_frame_user_menu";
 
         var DOMAIN_TREE = "domain_tree";
-    
+
         // Variables
         var host = "v.netc.io";
 	    var port = 443;
@@ -294,8 +294,8 @@
                             }
 		            	};
 		            },
-		            render:function(master, config){ 
-		            	return "<input type='checkbox' "+(config.checked?"checked='1'":"")+">"; 
+		            render:function(master, config){
+		            	return "<input type='checkbox' "+(config.checked?"checked='1'":"")+">";
 		            }
                 }, webix.ui.datafilter.masterCheckbox);
 
@@ -585,7 +585,7 @@
                         });
                     },
                     save: function (view, update, dp, callback) {
-                        //your saving pattern for single records ... 
+                        //your saving pattern for single records ...
                         //webix.ajax().post(url, update, callback);
                         var action = null;
                         var value = {};
@@ -652,7 +652,7 @@
                     },
                     // This result function it's not needed (by commenting it, we managed to send multiple updates for the same row)
                     result: function (state, view, dp, text, data, loader) {
-                        //your logic of server-side response processing ... 
+                        //your logic of server-side response processing ...
                         console.log('Default result', 'state', state, 'view', view, 'dp', dp, 'text', text, 'data', data, 'loader', loader);
                         //dp.processResult(state, data, details);
                         dp.processResult(state, data);
@@ -709,7 +709,7 @@
                         var data = [
                             {"year": Math.random()*10, "sales": Math.random() * 100, "sales2": Math.random() * 100, "sales3": Math.random() * 100}
                         ];
-                        
+
                         if (needsMoreData) {
                             data.push({"year": Math.random()*10, "sales": Math.random() * 100, "sales2": Math.random() * 100, "sales3": Math.random() * 100});
                             data.push({"year": Math.random()*10, "sales": Math.random() * 100, "sales2": Math.random() * 100, "sales3": Math.random() * 100});
@@ -749,12 +749,12 @@
                         });
                     },
                     save: function (view, update, dp, callback) {
-                        //your saving pattern for single records ... 
+                        //your saving pattern for single records ...
                         console.log('wsChartProxy default save: ', 'view', view, 'update', update, 'dp', dp, 'callback', callback);
                     },
                     // This result function it's not needed (by commenting it, we managed to send multiple updates for the same row)
                     result: function (state, view, dp, text, data, loader) {
-                        //your logic of server-side response processing ... 
+                        //your logic of server-side response processing ...
                         console.log('wsChartProxy default result: ', 'state', state, 'view', view, 'dp', dp, 'text', text, 'data', data, 'loader', loader);
                         //dp.processResult(state, data, details);
                         dp.processResult(state, data);
@@ -764,12 +764,12 @@
                     //method1:function(){ ...
                 };
                 updateView(data.elements);
-    /*            
+    /*
                 $$("sidebar").unselectAll();
                 $$("sidebar").closeAll();
 
                 setPath(data.detail.obj, data.detail.obj);
-    */            
+    */
             }, this);
 
             document.addEventListener("core.event.domain.admin.session.update_elements", function(response) {
@@ -893,7 +893,7 @@
                     domain: domain
                 }).then(function(response) {
                     console.log("Success on login", response);
-                    dispatchEvent("loginSuccessEvent", response);                    
+                    dispatchEvent("loginSuccessEvent", response);
                     return ncClient.sendMessageAsync("objects/admin.session/find", {});
                 }).then(function(response) {
                     console.log("Found an admin.session", response);
@@ -930,7 +930,7 @@
                 ncLogin = $$("login-form").getValues().login;
                 ncPass = $$("login-form").getValues().password;
                 remMe = $$("login-form").getValues().rememberMe;
-                
+
                 if (window.localStorage) {
                     localStorage.setItem(LS_NC_REMEMBER_ME, remMe);
                     if (remMe) {
@@ -941,7 +941,7 @@
                         currentStorage = sessionStorage;
                     }
                 }
-                
+
                 doLogin(ncLogin, ncPass, defaultDomain);
             } else {
     			webix.message({ "type": "error", "text": "Form data is invalid" });
@@ -966,7 +966,7 @@
                 doLogout();
             });
         }
-        
+
         function get_data(id, opts) {
             start = opts && opts.start? opts.start : 0;
             end = opts && opts.end? opts.end : 10;
@@ -999,7 +999,7 @@
             var elem = null;
             var length = (elements["length"])? elements.length : 0;
             var json = null;
-            
+
             console.log("updateView: ", elements);
             for (var i = 0; i < length; i++) {
                 elem = elements[i];
@@ -1405,7 +1405,7 @@
                 "ok": "Logout",
                 "cancel": "No",
                 "callback": function(response) {
-                    
+
                 }
                 */
                 webix.confirm(popup);
@@ -1465,7 +1465,7 @@
                         headHeight: 0,
                         borderless: true,
                         autofit: true,
-                        autofocus: true            
+                        autofocus: true
                     }
                     wrapper.body = elem.value.value;
                     wrapper.body.borderless = true; // Hide borders to make the wrapper seamless
@@ -1688,7 +1688,7 @@
         function breadcrumbsClicked(id, pathElem) {
             // TODO: Send this event to the server
             console.log('Breadcrumbs clicked: ' + pathElem);
-            
+
             ncClient.sendMessageAsync("objects/admin.session/element_action", {
                 element_id: id,
                 action: "selected",
@@ -1836,7 +1836,7 @@
             var user_img = "";
             var user_menu = {};
             var user_menu_icon = "";
-            
+
             if (state) {
                 domain_css = state[ADMIN_FRAME_DOMAIN_NAME].value.css.toLowerCase();
                 user_name = createCounterLabel(state[ADMIN_FRAME_USER_NAME]);
@@ -1845,7 +1845,7 @@
                 user_icon = state[ADMIN_FRAME_USER_ICON].value.icon_id;
                 user_menu = state[ADMIN_FRAME_USER_MENU];
                 user_menu_icon = state[ADMIN_FRAME_USER_MENU].value.icon;
-                
+
                 webix.ui(createProfilePopup(user_menu));
             }
 
@@ -1925,7 +1925,7 @@
                 id: id,
                 view: "uploader",
                 upload: "../_file",
-                apiOnly: true,                
+                apiOnly: true,
                 on: {
                     onBeforeFileAdd: function(item) {
                         console.log(id, "onBeforeFileAdd", item);
@@ -1975,7 +1975,7 @@
                         if (item && item.context && item.context.hasOwnProperty("callback")) {
                             callback = item.context.callback;
                         }
-    
+
                         xhr.upload.addEventListener("progress", function(e) {
                             if (callback.hasOwnProperty("updateProgress")) {
                                 callback.updateProgress(item, e.loaded/e.total*100);
@@ -2036,11 +2036,11 @@
                                 params.store_id = formValues[item.context.store_id_field];
                             }
                         }
-                        
+
                         xhr.open("POST", "../_file" + formatParams(params), true);
                         xhr.overrideMimeType("text/plain; charset=x-user-defined");
                         xhr.setRequestHeader("X-NetComposer-Auth", logic.getSessionId());
-                        
+
                         var fileReaderWorker = new Worker("app/js/file-reader-worker.js");
 
                         fileReaderWorker.onmessage = function(oEvent) {
@@ -2512,7 +2512,7 @@
                         && json[child] && typeof json[child] === "object") {
                             if (json[child].hasOwnProperty("nkParseFunction")) {
                                 value = json[child]["nkParseFunction"];
-                                if (value && typeof value === "string" && 
+                                if (value && typeof value === "string" &&
                                     (value.trim().startsWith("function") || value.trim().startsWith("webix.once"))) {
                                     console.log("Substituting object with its evaluated javascript code: '" + value + "'");
                                     json[child] = eval('(' + value + ')');
@@ -2589,7 +2589,7 @@
             var hours   = Math.floor(sec_num / 3600);
             var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
             var seconds = sec_num - (hours * 3600) - (minutes * 60);
-        
+
             if (hours   < 10) {hours   = "0"+hours;}
             if (minutes < 10) {minutes = "0"+minutes;}
             if (seconds < 10) {seconds = "0"+seconds;}
